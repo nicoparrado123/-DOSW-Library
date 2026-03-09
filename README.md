@@ -6,8 +6,8 @@ Sistema de gestión de biblioteca desarrollado con Spring Boot y Maven.
 
 - **GroupId**: edu.eci.dosw
 - **ArtifactId**: DOSW-Library
-- **Java Version**: 17
-- **Spring Boot Version**: 3.2.0
+- **version java**: 17
+- **version spring root**: 3.2.0
 
 ## Dependencias
 
@@ -16,32 +16,6 @@ Sistema de gestión de biblioteca desarrollado con Spring Boot y Maven.
 - JaCoCo (cobertura de pruebas)
 - SonarQube (análisis de calidad de código)
 
-## Estructura del Proyecto
-
-```
-edu.eci.dosw.tdd
-│
-├── controller
-│   ├── BookController.java
-│   ├── UserController.java
-│   └── LoanController.java
-│
-├── service
-│   └── LibraryService.java
-│
-├── model
-│   ├── Book.java
-│   ├── User.java
-│   └── Loan.java
-│
-├── util
-│   └── ValidationUtil.java
-│
-├── exception
-│   └── BookNotAvailableException.java
-│
-└── DoswLibraryApplication.java
-```
 
 ## Comandos Maven
 
