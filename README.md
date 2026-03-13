@@ -17,10 +17,4 @@ Sistema de gestión de biblioteca desarrollado con Spring Boot y Maven.
 - SonarQube (análisis de calidad de código)
 
 
-## Comandos Maven
 
-- Compilar: `mvn clean compile`
-- Ejecutar tests: `mvn test`
-- Generar reporte de cobertura: `mvn jacoco:report`
-- Análisis SonarQube: `mvn sonar:sonar`
-- Ejecutar aplicación: `mvn spring-boot:run`
