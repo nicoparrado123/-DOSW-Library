@@ -4,8 +4,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class DoswLibraryApplication {
+public class DswLibraryApplication {
     public static void main(String[] args) {
-        SpringApplication.run(DoswLibraryApplication.class, args);
+        SpringApplication.run(DswLibraryApplication.class, args);
     }
 }
