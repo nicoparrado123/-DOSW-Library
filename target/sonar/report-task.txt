@@ -1,0 +1,7 @@
+organization=nicoparrado123
+projectKey=nicoparrado123_-DOSW-Library
+serverUrl=https://sonarcloud.io
+serverVersion=8.0.0.82941
+dashboardUrl=https://sonarcloud.io/dashboard?id=nicoparrado123_-DOSW-Library
+ceTaskId=AZzthVPVdQSEZZOvaGf3
+ceTaskUrl=https://sonarcloud.io/api/ce/task?id=AZzthVPVdQSEZZOvaGf3

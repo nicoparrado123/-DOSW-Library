@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LoanService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">DOSW-Library</a> &gt; <a href="index.source.html" class="el_package">edu.eci.dosw.tdd.core.service</a> &gt; <span class="el_source">LoanService.java</span></div><h1>LoanService.java</h1><pre class="source lang-java linenums">package edu.eci.dosw.tdd.core.service;
+
+import edu.eci.dosw.tdd.core.exception.BookNotAvailableException;
+import edu.eci.dosw.tdd.core.exception.BookNotFoundException;
+import edu.eci.dosw.tdd.core.exception.LoanLimitExceededException;
+import edu.eci.dosw.tdd.core.exception.UserNotFoundException;
+import edu.eci.dosw.tdd.core.model.Loan;
+import edu.eci.dosw.tdd.core.model.LoanStatus;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
+@Service
+public class LoanService {
+
+    private static final int MAX_LOANS_PER_USER = 3;
+
+<span class="fc" id="L20">    private final List&lt;Loan&gt; loans = new ArrayList&lt;&gt;();</span>
+    private final BookService bookService;
+    private final UserService userService;
+
+<span class="fc" id="L24">    public LoanService(BookService bookService, UserService userService) {</span>
+<span class="fc" id="L25">        this.bookService = bookService;</span>
+<span class="fc" id="L26">        this.userService = userService;</span>
+<span class="fc" id="L27">    }</span>
+
+    public Loan borrowBook(String userId, String bookId)
+            throws UserNotFoundException, BookNotFoundException, BookNotAvailableException, LoanLimitExceededException {
+
+<span class="fc" id="L32">        var user = userService.getUserById(userId);</span>
+<span class="fc" id="L33">        var book = bookService.getBookById(bookId);</span>
+
+<span class="fc bfc" id="L35" title="All 2 branches covered.">        if (bookService.getCopies(bookId) &lt;= 0)</span>
+<span class="fc" id="L36">            throw new BookNotAvailableException(&quot;No copies available: &quot; + bookId);</span>
+
+<span class="fc" id="L38">        long activeLoans = loans.stream()</span>
+<span class="pc bpc" id="L39" title="2 of 4 branches missed.">                .filter(l -&gt; l.getUser().getId().equals(userId) &amp;&amp; l.getStatus() == LoanStatus.ACTIVE)</span>
+<span class="fc" id="L40">                .count();</span>
+<span class="fc bfc" id="L41" title="All 2 branches covered.">        if (activeLoans &gt;= MAX_LOANS_PER_USER)</span>
+<span class="fc" id="L42">            throw new LoanLimitExceededException(&quot;Loan limit reached for user: &quot; + userId);</span>
+
+<span class="fc" id="L44">        bookService.updateCopies(bookId, bookService.getCopies(bookId) - 1);</span>
+<span class="fc" id="L45">        Loan loan = new Loan(book, user, LocalDate.now());</span>
+<span class="fc" id="L46">        loans.add(loan);</span>
+<span class="fc" id="L47">        return loan;</span>
+    }
+
+    public Loan returnBook(String userId, String bookId)
+            throws UserNotFoundException, BookNotFoundException {
+
+<span class="fc" id="L53">        userService.getUserById(userId);</span>
+<span class="fc" id="L54">        bookService.getBookById(bookId);</span>
+
+<span class="fc" id="L56">        Loan loan = loans.stream()</span>
+<span class="pc bpc" id="L57" title="1 of 2 branches missed.">                .filter(l -&gt; l.getUser().getId().equals(userId)</span>
+<span class="pc bpc" id="L58" title="1 of 2 branches missed.">                        &amp;&amp; l.getBook().getId().equals(bookId)</span>
+<span class="pc bpc" id="L59" title="1 of 2 branches missed.">                        &amp;&amp; l.getStatus() == LoanStatus.ACTIVE)</span>
+<span class="fc" id="L60">                .findFirst()</span>
+<span class="pc" id="L61">                .orElseThrow(() -&gt; new BookNotFoundException(&quot;Active loan not found for book: &quot; + bookId));</span>
+
+<span class="fc" id="L63">        loan.setStatus(LoanStatus.RETURNED);</span>
+<span class="fc" id="L64">        loan.setReturnDate(LocalDate.now());</span>
+<span class="fc" id="L65">        bookService.updateCopies(bookId, bookService.getCopies(bookId) + 1);</span>
+<span class="fc" id="L66">        return loan;</span>
+    }
+
+    public List&lt;Loan&gt; getAllLoans() {
+<span class="fc" id="L70">        return new ArrayList&lt;&gt;(loans);</span>
+    }
+
+    public List&lt;Loan&gt; getLoansByUser(String userId) throws UserNotFoundException {
+<span class="fc" id="L74">        userService.getUserById(userId);</span>
+<span class="fc" id="L75">        return loans.stream()</span>
+<span class="fc" id="L76">                .filter(l -&gt; l.getUser().getId().equals(userId))</span>
+<span class="fc" id="L77">                .toList();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

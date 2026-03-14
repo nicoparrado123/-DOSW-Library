@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ServicioPrestamos.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">DOSW-Library</a> &gt; <a href="index.source.html" class="el_package">edu.eci.dosw.tdd.core.service</a> &gt; <span class="el_source">ServicioPrestamos.java</span></div><h1>ServicioPrestamos.java</h1><pre class="source lang-java linenums">package edu.eci.dosw.tdd.core.service;
+
+import edu.eci.dosw.tdd.core.exception.LibroNoDisponibleException;
+import edu.eci.dosw.tdd.core.exception.LibroNoEncontradoException;
+import edu.eci.dosw.tdd.core.exception.LimitePrestamosException;
+import edu.eci.dosw.tdd.core.exception.UsuarioNoEncontradoException;
+import edu.eci.dosw.tdd.core.model.EstadoPrestamo;
+import edu.eci.dosw.tdd.core.model.Prestamo;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
+@Service
+public class ServicioPrestamos {
+
+    private static final int limite = 3;
+
+<span class="fc" id="L20">    private final List&lt;Prestamo&gt; prestamos = new ArrayList&lt;&gt;();</span>
+    private final ServicioLibros servicioLibros;
+    private final ServicioUsuarios servicioUsuarios;
+
+<span class="fc" id="L24">    public ServicioPrestamos(ServicioLibros servicioLibros, ServicioUsuarios servicioUsuarios) {</span>
+<span class="fc" id="L25">        this.servicioLibros = servicioLibros;</span>
+<span class="fc" id="L26">        this.servicioUsuarios = servicioUsuarios;</span>
+<span class="fc" id="L27">    }</span>
+
+    public Prestamo prestar(String idUsuario, String idLibro)
+            throws UsuarioNoEncontradoException, LibroNoEncontradoException, LibroNoDisponibleException, LimitePrestamosException {
+
+<span class="fc" id="L32">        var usuario = servicioUsuarios.buscarPorId(idUsuario);</span>
+<span class="fc" id="L33">        var libro = servicioLibros.buscarPorId(idLibro);</span>
+
+<span class="fc bfc" id="L35" title="All 2 branches covered.">        if (servicioLibros.obtenerEjemplares(idLibro) &lt;= 0)</span>
+<span class="fc" id="L36">            throw new LibroNoDisponibleException(&quot;no hay ejemplares del libro: &quot; + idLibro);</span>
+
+<span class="fc" id="L38">        long activos = prestamos.stream()</span>
+<span class="pc bpc" id="L39" title="2 of 4 branches missed.">                .filter(p -&gt; p.getUsuario().getId().equals(idUsuario) &amp;&amp; p.getEstado() == EstadoPrestamo.ACTIVO)</span>
+<span class="fc" id="L40">                .count();</span>
+<span class="fc bfc" id="L41" title="All 2 branches covered.">        if (activos &gt;= limite)</span>
+<span class="fc" id="L42">            throw new LimitePrestamosException(&quot;el usuario ya tiene &quot; + limite + &quot; prestamos activos: &quot; + idUsuario);</span>
+
+<span class="fc" id="L44">        servicioLibros.actualizarEjemplares(idLibro, servicioLibros.obtenerEjemplares(idLibro) - 1);</span>
+<span class="fc" id="L45">        Prestamo prestamo = new Prestamo(libro, usuario, LocalDate.now());</span>
+<span class="fc" id="L46">        prestamos.add(prestamo);</span>
+<span class="fc" id="L47">        return prestamo;</span>
+    }
+
+    public Prestamo devolver(String idUsuario, String idLibro)
+            throws UsuarioNoEncontradoException, LibroNoEncontradoException {
+
+<span class="fc" id="L53">        servicioUsuarios.buscarPorId(idUsuario);</span>
+<span class="fc" id="L54">        servicioLibros.buscarPorId(idLibro);</span>
+
+<span class="fc" id="L56">        Prestamo prestamo = prestamos.stream()</span>
+<span class="pc bpc" id="L57" title="1 of 2 branches missed.">                .filter(p -&gt; p.getUsuario().getId().equals(idUsuario)</span>
+<span class="pc bpc" id="L58" title="1 of 2 branches missed.">                        &amp;&amp; p.getLibro().getId().equals(idLibro)</span>
+<span class="pc bpc" id="L59" title="1 of 2 branches missed.">                        &amp;&amp; p.getEstado() == EstadoPrestamo.ACTIVO)</span>
+<span class="fc" id="L60">                .findFirst()</span>
+<span class="pc" id="L61">                .orElseThrow(() -&gt; new LibroNoEncontradoException(&quot;no hay prestamo activo del libro: &quot; + idLibro));</span>
+
+<span class="fc" id="L63">        prestamo.setEstado(EstadoPrestamo.DEVUELTO);</span>
+<span class="fc" id="L64">        prestamo.setFechaDevolucion(LocalDate.now());</span>
+<span class="fc" id="L65">        servicioLibros.actualizarEjemplares(idLibro, servicioLibros.obtenerEjemplares(idLibro) + 1);</span>
+<span class="fc" id="L66">        return prestamo;</span>
+    }
+
+    public List&lt;Prestamo&gt; obtenerTodos() {
+<span class="fc" id="L70">        return new ArrayList&lt;&gt;(prestamos);</span>
+    }
+
+    public List&lt;Prestamo&gt; obtenerPorUsuario(String idUsuario) throws UsuarioNoEncontradoException {
+<span class="fc" id="L74">        servicioUsuarios.buscarPorId(idUsuario);</span>
+<span class="fc" id="L75">        return prestamos.stream()</span>
+<span class="fc" id="L76">                .filter(p -&gt; p.getUsuario().getId().equals(idUsuario))</span>
+<span class="fc" id="L77">                .toList();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
