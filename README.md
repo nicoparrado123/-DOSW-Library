@@ -21,7 +21,7 @@ Sistema de gestión de biblioteca desarrollado con Spring Boot y Maven. Permite 
 
 ## Diagrama General
 
-El sistema está organizado en capas. El cliente envía peticiones HTTP que llegan a los controladores. Cada controlador delega la lógica de negocio al servicio correspondiente. Los servicios validan los datos de entrada usando los validadores antes de operar sobre los modelos. Los controladores usan los mappers para convertir entre los modelos internos y los DTOs que se exponen al cliente.
+el sistema se divide en capas. el cliente manda peticiones HTTP que llegan a los controladores, cada controlador le pasa el trabajo al servicio que le corresponde. los servicios usan los validadores para revisar que los datos esten bien antes de tocar los modelos. los controladores usan los mappers para convertir entre los modelos internos y los DTOs que ve el cliente.
 
 ```mermaid
 graph TD
@@ -37,7 +37,7 @@ graph TD
 
 ## Diagrama Específico
 
-Este diagrama muestra paso a paso el flujo de un préstamo. El cliente hace una petición POST al `LoanController`, que llama a `LoanService`. El servicio primero valida los IDs con `LoanValidator`, luego busca el usuario en `UserService` y el libro en `BookService`. Verifica que haya ejemplares disponibles y que el usuario no supere el límite de 3 préstamos activos. Si todo es válido, descuenta un ejemplar y registra el préstamo, devolviendo un `LoanDTO` al cliente.
+aca se ve paso a paso como funciona un prestamo. el cliente llama al `LoanController` con el id del usuario y el libro, ese le pasa la tarea al `LoanService`. el servicio valida los ids, busca el usuario y el libro, revisa que haya ejemplares disponibles y que el usuario no tenga mas de 3 prestamos activos. si todo esta bien le resta un ejemplar al libro y registra el prestamo, al final le devuelve un `LoanDTO` al cliente.
 
 ```mermaid
 sequenceDiagram
@@ -66,7 +66,7 @@ sequenceDiagram
 
 ## Diagrama de Clases
 
-Muestra todas las clases del sistema con sus atributos, métodos y relaciones. `Loan` es la clase central ya que asocia un `Book` con un `User` y lleva el estado del préstamo (`LoanStatus`). Los servicios gestionan las colecciones de cada entidad y usan sus respectivos validadores para verificar los datos antes de operar. Los controladores reciben las peticiones HTTP y delegan al servicio correspondiente.
+aca estan todas las clases del sistema con sus atributos, metodos y como se relacionan entre ellas. `Loan` es la clase mas importante porque conecta un `Book` con un `User` y guarda el estado del prestamo con `LoanStatus`. los servicios manejan las listas de cada entidad y cada uno tiene su validador. los controladores solo reciben la peticion HTTP y se la pasan al servicio.
 
 ```mermaid
 classDiagram
