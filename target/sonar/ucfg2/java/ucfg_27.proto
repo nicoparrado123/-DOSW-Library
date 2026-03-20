@@ -1,36 +1,0 @@
-
-=__sonar_lambda_6$edu.eci.dosw.tdd.core.service.ServicioLibrosZ
-PC:/-DOSW-Library/src/main/java/edu/eci/dosw/tdd/core/service/ServicioLibros.java (1"startingBlock*²
-startingBlock (1‘
-Ž
-
-__unknown_file (
-idjava.lang.String"__id*T
-
-__unknown_file (8*6.
-,edu.eci.dosw.tdd.core.service.ServicioLibros"
-id*
-1*³
-1 (±®
- (&
-%4java.lang.String";edu.eci.dosw.tdd.core.model.Libro#getId()Ljava/lang/String;*D
-
-__unknown_file ((
-&
-l!edu.eci.dosw.tdd.core.model.Libro2getId()ÒÏ
- (1
-%5boolean",java.lang.String#equals(Ljava/lang/Object;)Z*4
-
-__unknown_file (
-
-%4java.lang.String*4
-
-__unknown_file (
-
-idjava.lang.String2equals(Ljava/lang/Object;)"
- (1
-
-%5boolean:2
- (&
-l!edu.eci.dosw.tdd.core.model.LibroB 
-java.util.function.Predicate

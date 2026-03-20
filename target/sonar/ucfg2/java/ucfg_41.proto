@@ -1,15 +1,0 @@
-
-Ledu.eci.dosw.tdd.core.model.Prestamo#getFechaPrestamo()Ljava/time/LocalDate;R
-HC:/-DOSW-Library/src/main/java/edu/eci/dosw/tdd/core/model/Prestamo.java (%"1*À
-11 (>‡
-„
-1 (>
-%0java.time.LocalDate"__id*W
-
-__unknown_file (;*9&
-$edu.eci.dosw.tdd.core.model.Prestamo"
-fechaPrestamo"'
-* (?
-
-%0java.time.LocalDateB(&
-$edu.eci.dosw.tdd.core.model.PrestamoH

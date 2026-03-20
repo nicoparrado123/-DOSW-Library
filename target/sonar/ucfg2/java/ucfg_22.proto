@@ -1,42 +1,0 @@
-
-@__sonar_lambda_5$edu.eci.dosw.tdd.core.service.ServicioPrestamos]
-SC:/-DOSW-Library/src/main/java/edu/eci/dosw/tdd/core/service/ServicioPrestamos.javaL L(E"startingBlock*Ã
-startingBlockL L(E¢
-Ÿ
-
-__unknown_file (
-	idUsuariojava.lang.String"__id*^
-
-__unknown_file (B*@1
-/edu.eci.dosw.tdd.core.service.ServicioPrestamos"
-	idUsuario*
-1*©
-1L L(çä
-L L(+)
-%5#edu.eci.dosw.tdd.core.model.Usuario"Vedu.eci.dosw.tdd.core.model.Prestamo#getUsuario()Ledu/eci/dosw/tdd/core/model/Usuario;*G
-
-__unknown_file (+
-)
-p$edu.eci.dosw.tdd.core.model.Prestamo2getUsuario()¶³
-L L(3
-%6java.lang.String"=edu.eci.dosw.tdd.core.model.Usuario#getId()Ljava/lang/String;*G
-
-__unknown_file (+
-)
-%5#edu.eci.dosw.tdd.core.model.Usuario2getId()ÙÖ
-L L(E
-%7boolean",java.lang.String#equals(Ljava/lang/Object;)Z*4
-
-__unknown_file (
-
-%6java.lang.String*;
-
-__unknown_file (
-
-	idUsuariojava.lang.String2equals(Ljava/lang/Object;)"
-L L(E
-
-%7boolean:5
-L L()
-p$edu.eci.dosw.tdd.core.model.PrestamoB 
-java.util.function.Predicate

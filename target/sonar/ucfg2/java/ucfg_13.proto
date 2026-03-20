@@ -1,15 +1,0 @@
-
-Aedu.eci.dosw.tdd.core.model.Usuario#getNombre()Ljava/lang/String;Q
-GC:/-DOSW-Library/src/main/java/edu/eci/dosw/tdd/core/model/Usuario.java ("1*°
-1' (-{
-y
-' (-
-%0java.lang.String"__id*O
-
-__unknown_file (3*1%
-#edu.eci.dosw.tdd.core.model.Usuario"
-nombre"$
-  (.
-
-%0java.lang.StringB'%
-#edu.eci.dosw.tdd.core.model.UsuarioH

@@ -1,25 +1,0 @@
-
-Bedu.eci.dosw.tdd.core.service.ServicioPrestamos#%field_initializer]
-SC:/-DOSW-Library/src/main/java/edu/eci/dosw/tdd/core/service/ServicioPrestamos.java ("1*÷
-1
-__unknown_file (<:
-1 (<
-%0java.util.ArrayList"java.util.ArrayListj
-h
-- (>
-%1"java.util.ArrayList#<init>()V*7
-
-__unknown_file (
-
-%0java.util.ArrayListŽ
-‹
- (?@1
-/edu.eci.dosw.tdd.core.service.ServicioPrestamos"
-	prestamos"__id*7
-
-__unknown_file (
-
-%0java.util.ArrayList"
- O(
-implicit returnB31
-/edu.eci.dosw.tdd.core.service.ServicioPrestamos

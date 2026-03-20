@@ -1,15 +1,0 @@
-
-;edu.eci.dosw.tdd.core.model.Libro#getId()Ljava/lang/String;O
-EC:/-DOSW-Library/src/main/java/edu/eci/dosw/tdd/core/model/Libro.java ("1*ª
-1# (%u
-s
-# (%
-%0java.lang.String"__id*I
-
-__unknown_file (-*+#
-!edu.eci.dosw.tdd.core.model.Libro"
-id"$
- (&
-
-%0java.lang.StringB%#
-!edu.eci.dosw.tdd.core.model.LibroH
