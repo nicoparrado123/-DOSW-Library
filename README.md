@@ -168,12 +168,12 @@ Resultado del análisis estático del proyecto en SonarCloud.
 ## Evidencia de pruebas
 
 ### Pruebas unitarias
-![prueba test libreria](imagenes/prueba%20test%20libreria.png)
+
+<img width="1060" height="532" alt="image" src="https://github.com/user-attachments/assets/f0f135c6-8141-44c0-94d9-43e4a8d25a53" />
 
 ### Cobertura JaCoCo
 <img width="1288" height="862" alt="image" src="https://github.com/user-attachments/assets/91bccff8-16c6-4bc8-9d85-b477b01677e6" />
 
-<img width="1060" height="532" alt="image" src="https://github.com/user-attachments/assets/f0f135c6-8141-44c0-94d9-43e4a8d25a53" />
 
 
 ---
