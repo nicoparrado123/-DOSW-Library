@@ -161,7 +161,8 @@ classDiagram
 
 Resultado del análisis estático del proyecto en SonarCloud.
 
-![cobertura sonarcloud](imagenes/cobertura%20nico.png)
+<img width="1699" height="856" alt="image" src="https://github.com/user-attachments/assets/5c860378-2300-4ef3-a5cc-92e5c989e168" />
+
 
 
 ## Evidencia de pruebas
@@ -170,8 +171,10 @@ Resultado del análisis estático del proyecto en SonarCloud.
 ![prueba test libreria](imagenes/prueba%20test%20libreria.png)
 
 ### Cobertura JaCoCo
-![jacoco test](imagenes/jacoco%20test.png)
-![test jacoco](imagenes/test%20jacoco.png)
+<img width="1288" height="862" alt="image" src="https://github.com/user-attachments/assets/91bccff8-16c6-4bc8-9d85-b477b01677e6" />
+
+<img width="1060" height="532" alt="image" src="https://github.com/user-attachments/assets/f0f135c6-8141-44c0-94d9-43e4a8d25a53" />
+
 
 ---
 
