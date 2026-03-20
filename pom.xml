@@ -16,7 +16,8 @@
     <description>Library Management System</description>
     <properties>
         <java.version>17</java.version>
-        <sonar.organization>your-org</sonar.organization>
+        <sonar.projectKey>nicoparrado123_library</sonar.projectKey>
+        <sonar.organization>nicoparrado123</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     </properties>
     <dependencies>
@@ -59,6 +60,17 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <includes>
+                        <include>**/*Test.java</include>
+                        <include>**/*Tests.java</include>
+                        <include>**/*TDD.java</include>
+                    </includes>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.sonarsource.scanner.maven</groupId>
