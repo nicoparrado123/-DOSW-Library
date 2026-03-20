@@ -1,5 +1,5 @@
 package edu.eci.dosw.tdd.core.model;
 
-public enum EstadoPrestamo {
+public enum LoanStatus {
     ACTIVO, DEVUELTO
 }

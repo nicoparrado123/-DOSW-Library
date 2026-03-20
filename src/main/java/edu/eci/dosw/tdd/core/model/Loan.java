@@ -2,25 +2,25 @@ package edu.eci.dosw.tdd.core.model;
 
 import java.time.LocalDate;
 
-public class Prestamo {
-    private Libro libro;
-    private Usuario usuario;
+public class Loan {
+    private Book libro;
+    private User usuario;
     private LocalDate fechaPrestamo;
     private LocalDate fechaDevolucion;
-    private EstadoPrestamo estado;
+    private LoanStatus estado;
 
-    public Prestamo(Libro libro, Usuario usuario, LocalDate fechaPrestamo) {
+    public Loan(Book libro, User usuario, LocalDate fechaPrestamo) {
         this.libro = libro;
         this.usuario = usuario;
         this.fechaPrestamo = fechaPrestamo;
-        this.estado = EstadoPrestamo.ACTIVO;
+        this.estado = LoanStatus.ACTIVO;
     }
 
-    public Libro getLibro() { return libro; }
-    public Usuario getUsuario() { return usuario; }
+    public Book getLibro() { return libro; }
+    public User getUsuario() { return usuario; }
     public LocalDate getFechaPrestamo() { return fechaPrestamo; }
     public LocalDate getFechaDevolucion() { return fechaDevolucion; }
-    public EstadoPrestamo getEstado() { return estado; }
+    public LoanStatus getEstado() { return estado; }
     public void setFechaDevolucion(LocalDate fechaDevolucion) { this.fechaDevolucion = fechaDevolucion; }
-    public void setEstado(EstadoPrestamo estado) { this.estado = estado; }
+    public void setEstado(LoanStatus estado) { this.estado = estado; }
 }
