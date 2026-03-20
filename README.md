@@ -21,23 +21,23 @@ Sistema de gestión de biblioteca desarrollado con Spring Boot y Maven. Permite 
 
 ## Diagrama General
 
-Muestra cómo interactúan las capas principales del sistema. El cliente hace peticiones HTTP a los controladores, estos delegan la lógica a los servicios, y los servicios usan los modelos para representar los datos.
+El sistema está organizado en capas. El cliente envía peticiones HTTP que llegan a los controladores. Cada controlador delega la lógica de negocio al servicio correspondiente. Los servicios validan los datos de entrada usando los validadores antes de operar sobre los modelos. Los controladores usan los mappers para convertir entre los modelos internos y los DTOs que se exponen al cliente.
 
 ```mermaid
 graph TD
     Cliente -->|HTTP Request| Controller
-    Controller -->|usa| Service
-    Service -->|valida con| Validator
+    Controller -->|delega lógica| Service
+    Service -->|valida entrada con| Validator
     Service -->|opera sobre| Model
-    Controller -->|transforma con| Mapper
-    Mapper -->|convierte a/desde| DTO
+    Controller -->|convierte con| Mapper
+    Mapper -->|transforma a/desde| DTO
 ```
 
 ---
 
 ## Diagrama Específico
 
-Muestra el flujo completo de un préstamo: desde que el cliente llama al endpoint hasta que se registra el préstamo y se actualiza el stock de ejemplares.
+Este diagrama muestra paso a paso el flujo de un préstamo. El cliente hace una petición POST al `LoanController`, que llama a `LoanService`. El servicio primero valida los IDs con `LoanValidator`, luego busca el usuario en `UserService` y el libro en `BookService`. Verifica que haya ejemplares disponibles y que el usuario no supere el límite de 3 préstamos activos. Si todo es válido, descuenta un ejemplar y registra el préstamo, devolviendo un `LoanDTO` al cliente.
 
 ```mermaid
 sequenceDiagram
@@ -66,7 +66,7 @@ sequenceDiagram
 
 ## Diagrama de Clases
 
-Muestra las clases del sistema, sus atributos, métodos y relaciones entre ellas.
+Muestra todas las clases del sistema con sus atributos, métodos y relaciones. `Loan` es la clase central ya que asocia un `Book` con un `User` y lleva el estado del préstamo (`LoanStatus`). Los servicios gestionan las colecciones de cada entidad y usan sus respectivos validadores para verificar los datos antes de operar. Los controladores reciben las peticiones HTTP y delegan al servicio correspondiente.
 
 ```mermaid
 classDiagram
@@ -154,73 +154,20 @@ classDiagram
         +validar(String, String)
     }
 
-    Loan --> Book
-    Loan --> User
-    Loan --> LoanStatus
-    BookService --> Book
-    BookService --> BookValidator
-    UserService --> User
-    UserService --> UserValidator
-    LoanService --> Loan
-    LoanService --> BookService
-    LoanService --> UserService
-    LoanService --> LoanValidator
-    BookController --> BookService
-    UserController --> UserService
-    LoanController --> LoanService
-```
-
----
-
-## Endpoints de la API
-
-### Libros
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/libros` | Obtener todos los libros |
-| GET | `/libros/{id}` | Buscar libro por ID |
-| POST | `/libros` | Agregar un libro |
-
-Body POST:
-```json
-{
-  "id": "lib-001",
-  "titulo": "Clean Code",
-  "autor": "Martin",
-  "copies": 3
-}
-```
-
-### Usuarios
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/usuarios` | Obtener todos los usuarios |
-| GET | `/usuarios/{id}` | Buscar usuario por ID |
-| POST | `/usuarios` | Registrar un usuario |
-
-Body POST:
-```json
-{
-  "id": "usr-001",
-  "nombre": "Nico"
-}
-```
-
-### Préstamos
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/prestamos` | Obtener todos los préstamos |
-| POST | `/prestamos/{idUsuario}/{idLibro}` | Realizar un préstamo |
-| PUT | `/prestamos/devolver/{idUsuario}/{idLibro}` | Devolver un libro |
-
----
-
-## Documentación Swagger
-
-Con la aplicación corriendo, acceder a:
-
-```
-http://localhost:8080/swagger-ui.html
+    Loan "1" --> "1" Book : tiene
+    Loan "1" --> "1" User : pertenece a
+    Loan "1" --> "1" LoanStatus : tiene estado
+    BookService "1" --> "0..*" Book : gestiona
+    BookService "1" --> "1" BookValidator : usa
+    UserService "1" --> "0..*" User : gestiona
+    UserService "1" --> "1" UserValidator : usa
+    LoanService "1" --> "0..*" Loan : gestiona
+    LoanService "1" --> "1" BookService : usa
+    LoanService "1" --> "1" UserService : usa
+    LoanService "1" --> "1" LoanValidator : usa
+    BookController "1" --> "1" BookService : delega en
+    UserController "1" --> "1" UserService : delega en
+    LoanController "1" --> "1" LoanService : delega en
 ```
 
 ---
