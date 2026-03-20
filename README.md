@@ -2,21 +2,6 @@
 
 Sistema de gestión de biblioteca desarrollado con Spring Boot y Maven. Permite registrar usuarios, agregar libros con sus ejemplares disponibles, realizar préstamos y registrar devoluciones.
 
-## Configuración del Proyecto
-
-- **GroupId**: edu.eci.dosw
-- **ArtifactId**: DOSW-Library
-- **Java**: 17
-- **Spring Boot**: 3.2.0
-
-## Dependencias
-
-- Spring Boot Starter Web
-- Spring Boot Starter Test (JUnit 5)
-- Springdoc OpenAPI (Swagger UI)
-- JaCoCo
-- SonarQube
-
 ---
 
 ## Diagrama General
@@ -169,22 +154,6 @@ classDiagram
     UserController "1" --> "1" UserService : delega en
     LoanController "1" --> "1" LoanService : delega en
 ```
-
----
-
-## Ejecución de pruebas
-
-```bash
-mvn test
-```
-
-## Cobertura con JaCoCo
-
-```bash
-mvn test jacoco:report
-```
-
-El reporte se genera en `target/site/jacoco/index.html`.
 
 ---
 
