@@ -380,7 +380,7 @@ el modelo NoSQL usa tres colecciones. `books` y `users` son documentos independi
     { "status": "DEVUELTO",  "fecha": "2024-11-15" }
   ]
 }
-
+```
 
 ---
 
