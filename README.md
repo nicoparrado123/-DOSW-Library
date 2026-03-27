@@ -380,19 +380,7 @@ el modelo NoSQL usa tres colecciones. `books` y `users` son documentos independi
     { "status": "DEVUELTO",  "fecha": "2024-11-15" }
   ]
 }
-```
 
-### Diagrama de colecciones
-
-```mermaid
-graph TD
-    LOANS["loans\n─────\n_id\nusuarioId ──ref──▶\nlibroId   ──ref──▶\nfechaPrestamo\nfechaDevolucion\nestado\nhistorial embebido"]
-    USERS["users\n─────\n_id\nnombre\nusername\npassword\nemail\nrole\nmembresia\nfechaRegistro"]
-    BOOKS["books\n─────\n_id\ntitulo\nautor\nisbn\ntipoPublicacion\nfechaPublicacion\nfechaAgregado\ncategorias[ ]\nmetadata embebido\ndisponibilidad embebido"]
-
-    LOANS -->|referencia usuarioId| USERS
-    LOANS -->|referencia libroId| BOOKS
-```
 
 ---
 
