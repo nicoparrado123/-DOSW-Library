@@ -314,6 +314,88 @@ erDiagram
 
 ---
 
+## Modelo No Relacional (MongoDB)
+
+el modelo NoSQL usa tres colecciones. `books` y `users` son documentos independientes con toda su información embebida. `loans` referencia a ambos por id y embebe el historial de cambios de estado directamente dentro del documento del préstamo.
+
+### Decisiones de diseño
+
+- `metadata`, `disponibilidad` y `categorias` se **embeben** en `books` porque son datos propios del libro, siempre se leen juntos y no se comparten con otros documentos.
+- `historial` se **embebe** en `loans` porque es exclusivo de ese préstamo y crece de forma acotada (pocos cambios de estado por préstamo).
+- `usuario` y `libro` en `loans` se **referencian** por id porque son entidades independientes que pueden consultarse y modificarse por separado.
+
+### Colección: books
+
+```json
+{
+  "_id": "isbn-001",
+  "titulo": "Clean Code",
+  "autor": "Robert C. Martin",
+  "isbn": "978-0132350884",
+  "tipoPublicacion": "ebook",
+  "fechaPublicacion": "2008-08-01",
+  "fechaAgregado": "2024-01-15",
+  "categorias": ["programacion", "buenas practicas"],
+  "metadata": {
+    "paginas": 431,
+    "idioma": "ingles",
+    "editorial": "Prentice Hall"
+  },
+  "disponibilidad": {
+    "status": "DISPONIBLE",
+    "totalCopias": 5,
+    "copiasDisponibles": 3,
+    "copiasPrestadas": 2
+  }
+}
+```
+
+### Colección: users
+
+```json
+{
+  "_id": "u-001",
+  "nombre": "Juan Perez",
+  "username": "jperez",
+  "password": "$2a$10$...",
+  "email": "jperez@mail.com",
+  "role": "USER",
+  "membresia": "PLATINUM",
+  "fechaRegistro": "2024-03-10"
+}
+```
+
+### Colección: loans
+
+```json
+{
+  "_id": "loan-001",
+  "usuarioId": "u-001",
+  "libroId": "isbn-001",
+  "fechaPrestamo": "2024-11-01",
+  "fechaDevolucion": "2024-11-15",
+  "estado": "DEVUELTO",
+  "historial": [
+    { "status": "ACTIVO",    "fecha": "2024-11-01" },
+    { "status": "DEVUELTO",  "fecha": "2024-11-15" }
+  ]
+}
+```
+
+### Diagrama de colecciones
+
+```mermaid
+graph TD
+    LOANS["loans\n─────\n_id\nusuarioId ──ref──▶\nlibroId   ──ref──▶\nfechaPrestamo\nfechaDevolucion\nestado\nhistorial embebido"]
+    USERS["users\n─────\n_id\nnombre\nusername\npassword\nemail\nrole\nmembresia\nfechaRegistro"]
+    BOOKS["books\n─────\n_id\ntitulo\nautor\nisbn\ntipoPublicacion\nfechaPublicacion\nfechaAgregado\ncategorias[ ]\nmetadata embebido\ndisponibilidad embebido"]
+
+    LOANS -->|referencia usuarioId| USERS
+    LOANS -->|referencia libroId| BOOKS
+```
+
+---
+
 ## Análisis estático con SonarCloud
 
 Resultado del análisis estático del proyecto en SonarCloud.
