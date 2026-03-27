@@ -6,7 +6,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class UserMapper {
     public User toModel(UserDTO dto) {
-        return new User(dto.getId(), dto.getNombre());
+        User user = new User(dto.getId(), dto.getNombre());
+        user.setUsername(dto.getUsername());
+        user.setPassword(dto.getPassword());
+        user.setRole(dto.getRole());
+        return user;
     }
 
     public UserDTO toDTO(User usuario) {
