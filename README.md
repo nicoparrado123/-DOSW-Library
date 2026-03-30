@@ -401,6 +401,10 @@ Resultado del análisis estático del proyecto en SonarCloud.
 ### Cobertura JaCoCo
 <img width="1288" height="862" alt="image" src="https://github.com/user-attachments/assets/91bccff8-16c6-4bc8-9d85-b477b01677e6" />
 
+### video funcionamiento seguridad
+
+https://youtu.be/g_eFTXSoLVs
+
 
 
 ---
