@@ -2,13 +2,11 @@ package edu.eci.dosw.tdd;
 
 import edu.eci.dosw.tdd.core.exception.UserNotFoundException;
 import edu.eci.dosw.tdd.core.model.User;
+import edu.eci.dosw.tdd.core.repository.UserRepositoryPort;
 import edu.eci.dosw.tdd.core.service.UserService;
 import edu.eci.dosw.tdd.core.validator.UserValidator;
-import edu.eci.dosw.tdd.persistence.relational.entity.UserEntity;
-import edu.eci.dosw.tdd.persistence.relational.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,18 +17,16 @@ import static org.mockito.Mockito.*;
 class ServicioUsuariosTest {
 
     private UserService userService;
-    private UserRepository userRepository;
-    private UserEntity entityNico;
+    private UserRepositoryPort userRepository;
 
     @BeforeEach
     void iniciar() {
-        userRepository = mock(UserRepository.class);
-        PasswordEncoder encoder = mock(PasswordEncoder.class);
-        when(encoder.encode(any())).thenReturn("hashed");
-        userService = new UserService(userRepository, new UserValidator(), encoder);
-        entityNico = new UserEntity("nico-001", "nico", "nico_user", "hashed", UserEntity.Role.USER);
-        when(userRepository.findById("nico-001")).thenReturn(Optional.of(entityNico));
-        when(userRepository.findAll()).thenReturn(List.of(entityNico));
+        userRepository = mock(UserRepositoryPort.class);
+        userService = new UserService(userRepository, new UserValidator());
+        User user = new User("nico-001", "nico");
+        user.setUsername("nico_user");
+        when(userRepository.findById("nico-001")).thenReturn(Optional.of(user));
+        when(userRepository.findAll()).thenReturn(List.of(user));
     }
 
     @Test
@@ -55,6 +51,6 @@ class ServicioUsuariosTest {
         user.setUsername("amigo");
         user.setPassword("pass12");
         userService.registrar(user);
-        verify(userRepository).save(any(UserEntity.class));
+        verify(userRepository).save(any(User.class));
     }
 }

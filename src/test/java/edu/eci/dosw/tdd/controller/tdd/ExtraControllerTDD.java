@@ -1,29 +1,32 @@
 package edu.eci.dosw.tdd.controller.tdd;
 
-import edu.eci.dosw.tdd.persistence.relational.entity.BookEntity;
-import edu.eci.dosw.tdd.persistence.relational.entity.UserEntity;
-import edu.eci.dosw.tdd.persistence.relational.repository.BookRepository;
-import edu.eci.dosw.tdd.persistence.relational.repository.LoanRepository;
-import edu.eci.dosw.tdd.persistence.relational.repository.UserRepository;
+import edu.eci.dosw.tdd.persistence.nonrelational.document.UserDocument;
+import edu.eci.dosw.tdd.persistence.nonrelational.repository.BookMongoRepository;
+import edu.eci.dosw.tdd.persistence.nonrelational.repository.LoanMongoRepository;
+import edu.eci.dosw.tdd.persistence.nonrelational.repository.UserMongoRepository;
 import edu.eci.dosw.tdd.security.JwtService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+
+import edu.eci.dosw.tdd.persistence.nonrelational.document.BookDocument;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@ActiveProfiles("mongo")
 public class ExtraControllerTDD {
 
     @Autowired private MockMvc mockMvc;
-    @Autowired private BookRepository bookRepository;
-    @Autowired private UserRepository userRepository;
-    @Autowired private LoanRepository loanRepository;
+    @Autowired private BookMongoRepository bookMongoRepository;
+    @Autowired private UserMongoRepository userMongoRepository;
+    @Autowired private LoanMongoRepository loanMongoRepository;
     @Autowired private JwtService jwtService;
 
     private String librarianToken;
@@ -31,16 +34,36 @@ public class ExtraControllerTDD {
 
     @BeforeEach
     void preparar() {
-        loanRepository.deleteAll();
-        bookRepository.deleteAll();
-        userRepository.deleteAll();
-        userRepository.save(new UserEntity("usr-001", "Nico", "nico", "pass", UserEntity.Role.USER));
-        bookRepository.save(new BookEntity("lib-001", "Clean Code", "Martin", 3, 3));
-        bookRepository.save(new BookEntity("lib-002", "Refactoring", "Fowler", 1, 1));
-        bookRepository.save(new BookEntity("lib-003", "DDD", "Evans", 1, 1));
-        bookRepository.save(new BookEntity("lib-004", "SICP", "Abelson", 1, 1));
+        loanMongoRepository.deleteAll();
+        bookMongoRepository.deleteAll();
+        userMongoRepository.deleteAll();
+
+        UserDocument user = new UserDocument();
+        user.setId("usr-001"); user.setNombre("Nico"); user.setUsername("nico");
+        user.setPassword("pass"); user.setRole("USER");
+        userMongoRepository.save(user);
+
+        for (String[] b : new String[][]{
+            {"lib-001","Clean Code","Martin","3"},
+            {"lib-002","Refactoring","Fowler","1"},
+            {"lib-003","DDD","Evans","1"},
+            {"lib-004","SICP","Abelson","1"}
+        }) {
+            bookMongoRepository.save(buildBook(b[0], b[1], b[2], Integer.parseInt(b[3])));
+        }
+
         librarianToken = jwtService.generateToken("lib-001", "LIBRARIAN");
         userToken = jwtService.generateToken("usr-001", "USER");
+    }
+
+    private BookDocument buildBook(String id, String titulo, String autor, int stock) {
+        BookDocument doc = new BookDocument();
+        doc.setId(id); doc.setTitulo(titulo); doc.setAutor(autor);
+        BookDocument.Disponibilidad disp = new BookDocument.Disponibilidad();
+        disp.setTotalCopias(stock); disp.setCopiasDisponibles(stock);
+        disp.setStatus("DISPONIBLE");
+        doc.setDisponibilidad(disp);
+        return doc;
     }
 
     @Test

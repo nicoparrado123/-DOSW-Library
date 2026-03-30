@@ -1,8 +1,7 @@
 package edu.eci.dosw.tdd.controller.tdd;
 
-import edu.eci.dosw.tdd.persistence.relational.entity.UserEntity;
-import edu.eci.dosw.tdd.persistence.relational.repository.LoanRepository;
-import edu.eci.dosw.tdd.persistence.relational.repository.UserRepository;
+import edu.eci.dosw.tdd.persistence.nonrelational.repository.LoanMongoRepository;
+import edu.eci.dosw.tdd.persistence.nonrelational.repository.UserMongoRepository;
 import edu.eci.dosw.tdd.security.JwtService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -17,19 +17,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@ActiveProfiles("mongo")
 public class UserTDD {
 
     @Autowired private MockMvc mockMvc;
-    @Autowired private UserRepository userRepository;
-    @Autowired private LoanRepository loanRepository;
+    @Autowired private UserMongoRepository userMongoRepository;
+    @Autowired private LoanMongoRepository loanMongoRepository;
     @Autowired private JwtService jwtService;
 
     private String librarianToken;
 
     @BeforeEach
     void limpiar() {
-        loanRepository.deleteAll();
-        userRepository.deleteAll();
+        loanMongoRepository.deleteAll();
+        userMongoRepository.deleteAll();
         librarianToken = jwtService.generateToken("lib-001", "LIBRARIAN");
     }
 

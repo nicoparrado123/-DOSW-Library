@@ -16,7 +16,10 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.springframework.test.context.ActiveProfiles;
+
 @SpringBootTest
+@ActiveProfiles("mongo")
 class NonRelationalRepositoryTest {
 
     @Autowired private BookMongoRepository bookMongoRepository;

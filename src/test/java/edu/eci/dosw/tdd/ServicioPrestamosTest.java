@@ -4,15 +4,15 @@ import edu.eci.dosw.tdd.core.exception.BookNotAvailableException;
 import edu.eci.dosw.tdd.core.exception.BookNotFoundException;
 import edu.eci.dosw.tdd.core.exception.LoanLimitException;
 import edu.eci.dosw.tdd.core.exception.UserNotFoundException;
+import edu.eci.dosw.tdd.core.model.Book;
+import edu.eci.dosw.tdd.core.model.Loan;
 import edu.eci.dosw.tdd.core.model.LoanStatus;
+import edu.eci.dosw.tdd.core.model.User;
+import edu.eci.dosw.tdd.core.repository.LoanRepositoryPort;
 import edu.eci.dosw.tdd.core.service.BookService;
 import edu.eci.dosw.tdd.core.service.LoanService;
 import edu.eci.dosw.tdd.core.service.UserService;
 import edu.eci.dosw.tdd.core.validator.LoanValidator;
-import edu.eci.dosw.tdd.persistence.relational.entity.BookEntity;
-import edu.eci.dosw.tdd.persistence.relational.entity.LoanEntity;
-import edu.eci.dosw.tdd.persistence.relational.entity.UserEntity;
-import edu.eci.dosw.tdd.persistence.relational.repository.LoanRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -28,33 +28,35 @@ class ServicioPrestamosTest {
     private LoanService loanService;
     private BookService bookService;
     private UserService userService;
-    private LoanRepository loanRepository;
+    private LoanRepositoryPort loanRepository;
 
-    private BookEntity bookL1;
-    private BookEntity bookL2;
-    private UserEntity userNico;
+    private User userNico;
+    private Book bookL1;
+    private Book bookL2;
 
     @BeforeEach
     void iniciar() throws Exception {
         bookService = mock(BookService.class);
         userService = mock(UserService.class);
-        loanRepository = mock(LoanRepository.class);
+        loanRepository = mock(LoanRepositoryPort.class);
         loanService = new LoanService(loanRepository, bookService, userService, new LoanValidator());
 
-        userNico = new UserEntity("nico-001", "nico", "nico", "pass", UserEntity.Role.USER);
-        bookL1 = new BookEntity("nico-l1", "clean code", "martin", 2, 2);
-        bookL2 = new BookEntity("nico-l2", "refactoring", "fowler", 1, 1);
+        userNico = new User("nico-001", "nico");
+        bookL1 = new Book("nico-l1", "clean code", "martin", 2);
+        bookL2 = new Book("nico-l2", "refactoring", "fowler", 1);
 
         when(userService.buscarEntidadPorId("nico-001")).thenReturn(userNico);
-        when(bookService.buscarEntidadPorId("nico-l1")).thenReturn(bookL1);
-        when(bookService.buscarEntidadPorId("nico-l2")).thenReturn(bookL2);
+        when(bookService.buscarPorId("nico-l1")).thenReturn(bookL1);
+        when(bookService.buscarPorId("nico-l2")).thenReturn(bookL2);
+        when(bookService.obtenerEjemplares("nico-l1")).thenReturn(2);
+        when(bookService.obtenerEjemplares("nico-l2")).thenReturn(1);
         when(loanRepository.countByUsuarioIdAndEstado("nico-001", LoanStatus.ACTIVO)).thenReturn(0L);
         when(loanRepository.save(any())).thenAnswer(i -> i.getArgument(0));
     }
 
     @Test
     void prestarLibroExitoso() throws Exception {
-        var prestamo = loanService.prestar("nico-001", "nico-l1");
+        Loan prestamo = loanService.prestar("nico-001", "nico-l1");
         assertEquals(LoanStatus.ACTIVO, prestamo.getEstado());
     }
 
@@ -65,8 +67,8 @@ class ServicioPrestamosTest {
     }
 
     @Test
-    void prestarSinEjemplaresLanzaExcepcion() {
-        bookL2.setStockDisponible(0);
+    void prestarSinEjemplaresLanzaExcepcion() throws Exception {
+        when(bookService.obtenerEjemplares("nico-l2")).thenReturn(0);
         assertThrows(BookNotAvailableException.class, () -> loanService.prestar("nico-001", "nico-l2"));
     }
 
@@ -84,18 +86,19 @@ class ServicioPrestamosTest {
 
     @Test
     void prestarLibroInexistenteLanzaExcepcion() throws Exception {
-        when(bookService.buscarEntidadPorId("nico-999")).thenThrow(new BookNotFoundException("no existe"));
+        when(bookService.buscarPorId("nico-999")).thenThrow(new BookNotFoundException("no existe"));
         assertThrows(BookNotFoundException.class, () -> loanService.prestar("nico-001", "nico-999"));
     }
 
     @Test
     void devolverLibroExitoso() throws Exception {
-        LoanEntity entity = new LoanEntity(bookL1, userNico, LocalDate.now());
+        Loan loan = new Loan(bookL1, userNico, LocalDate.now());
         when(loanRepository.findByUsuarioIdAndLibroIdAndEstado("nico-001", "nico-l1", LoanStatus.ACTIVO))
-                .thenReturn(Optional.of(entity));
+                .thenReturn(Optional.of(loan));
         when(bookService.obtenerEjemplares("nico-l1")).thenReturn(1);
-        var prestamo = loanService.devolver("nico-001", "nico-l1");
-        assertEquals(LoanStatus.DEVUELTO, prestamo.getEstado());
+        when(loanRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        Loan resultado = loanService.devolver("nico-001", "nico-l1");
+        assertEquals(LoanStatus.DEVUELTO, resultado.getEstado());
     }
 
     @Test

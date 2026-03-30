@@ -1,7 +1,7 @@
 package edu.eci.dosw.tdd.controller.tdd;
 
-import edu.eci.dosw.tdd.persistence.relational.entity.BookEntity;
-import edu.eci.dosw.tdd.persistence.relational.repository.BookRepository;
+import edu.eci.dosw.tdd.persistence.nonrelational.document.BookDocument;
+import edu.eci.dosw.tdd.persistence.nonrelational.repository.BookMongoRepository;
 import edu.eci.dosw.tdd.security.JwtService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -16,10 +17,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@ActiveProfiles("mongo")
 public class BookTDD {
 
     @Autowired private MockMvc mockMvc;
-    @Autowired private BookRepository bookRepository;
+    @Autowired private BookMongoRepository bookMongoRepository;
     @Autowired private JwtService jwtService;
 
     private String librarianToken;
@@ -27,7 +29,7 @@ public class BookTDD {
 
     @BeforeEach
     void limpiar() {
-        bookRepository.deleteAll();
+        bookMongoRepository.deleteAll();
         librarianToken = jwtService.generateToken("lib-001", "LIBRARIAN");
         userToken = jwtService.generateToken("usr-001", "USER");
     }
@@ -49,7 +51,15 @@ public class BookTDD {
 
     @Test
     void obtenerLibroPorId() throws Exception {
-        bookRepository.save(new BookEntity("lib-002", "Refactoring", "Fowler", 2, 2));
+        BookDocument doc = new BookDocument();
+        doc.setId("lib-002");
+        doc.setTitulo("Refactoring");
+        doc.setAutor("Fowler");
+        BookDocument.Disponibilidad disp = new BookDocument.Disponibilidad();
+        disp.setCopiasDisponibles(2);
+        disp.setTotalCopias(2);
+        doc.setDisponibilidad(disp);
+        bookMongoRepository.save(doc);
 
         mockMvc.perform(get("/libros/lib-002")
                 .header("Authorization", "Bearer " + userToken))

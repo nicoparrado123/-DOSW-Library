@@ -1,7 +1,7 @@
 package edu.eci.dosw.tdd.controller;
 
-import edu.eci.dosw.tdd.persistence.relational.entity.UserEntity;
-import edu.eci.dosw.tdd.persistence.relational.repository.UserRepository;
+import edu.eci.dosw.tdd.core.repository.UserRepositoryPort;
+import edu.eci.dosw.tdd.core.model.User;
 import edu.eci.dosw.tdd.security.JwtService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -13,11 +13,11 @@ import java.util.Map;
 @RequestMapping("/auth")
 public class AuthController {
 
-    private final UserRepository userRepository;
+    private final UserRepositoryPort userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
-    public AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
+    public AuthController(UserRepositoryPort userRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
@@ -27,7 +27,7 @@ public class AuthController {
     public ResponseEntity<Map<String, String>> login(@RequestBody Map<String, String> body) {
         String username = body.get("username");
         String password = body.get("password");
-        UserEntity user = userRepository.findByUsername(username)
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("credenciales invalidas"));
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new IllegalArgumentException("credenciales invalidas");

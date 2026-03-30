@@ -16,7 +16,10 @@ import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.springframework.test.context.ActiveProfiles;
+
 @SpringBootTest
+@ActiveProfiles("mongo")
 class RelationalRepositoryTest {
 
     @Autowired private BookRepository bookRepository;

@@ -2,10 +2,9 @@ package edu.eci.dosw.tdd;
 
 import edu.eci.dosw.tdd.core.exception.BookNotFoundException;
 import edu.eci.dosw.tdd.core.model.Book;
+import edu.eci.dosw.tdd.core.repository.BookRepositoryPort;
 import edu.eci.dosw.tdd.core.service.BookService;
 import edu.eci.dosw.tdd.core.validator.BookValidator;
-import edu.eci.dosw.tdd.persistence.relational.entity.BookEntity;
-import edu.eci.dosw.tdd.persistence.relational.repository.BookRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -18,16 +17,16 @@ import static org.mockito.Mockito.*;
 class ServicioLibrosTest {
 
     private BookService bookService;
-    private BookRepository bookRepository;
-    private BookEntity entityNico;
+    private BookRepositoryPort bookRepository;
 
     @BeforeEach
     void iniciar() {
-        bookRepository = mock(BookRepository.class);
+        bookRepository = mock(BookRepositoryPort.class);
         bookService = new BookService(bookRepository, new BookValidator());
-        entityNico = new BookEntity("nico-001", "clean code", "martin", 3, 3);
-        when(bookRepository.findById("nico-001")).thenReturn(Optional.of(entityNico));
-        when(bookRepository.findAll()).thenReturn(List.of(entityNico));
+        Book book = new Book("nico-001", "clean code", "martin", 3);
+        when(bookRepository.findById("nico-001")).thenReturn(Optional.of(book));
+        when(bookRepository.findAll()).thenReturn(List.of(book));
+        when(bookRepository.getStock("nico-001")).thenReturn(3);
     }
 
     @Test
@@ -37,8 +36,7 @@ class ServicioLibrosTest {
 
     @Test
     void buscarLibroPorId() throws BookNotFoundException {
-        Book libro = bookService.buscarPorId("nico-001");
-        assertEquals("nico-001", libro.getId());
+        assertEquals("nico-001", bookService.buscarPorId("nico-001").getId());
     }
 
     @Test
@@ -55,13 +53,14 @@ class ServicioLibrosTest {
     @Test
     void actualizarEjemplares() throws BookNotFoundException {
         bookService.actualizarEjemplares("nico-001", 2);
-        verify(bookRepository).save(entityNico);
+        verify(bookRepository).updateStock("nico-001", 2);
     }
 
     @Test
     void agregarLibroNuevo() {
         when(bookRepository.findById("nico-002")).thenReturn(Optional.empty());
+        when(bookRepository.save(any(), anyInt())).thenReturn(new Book("nico-002", "refactoring", "fowler", 2));
         bookService.agregarLibro(new Book("nico-002", "refactoring", "fowler", 0), 2);
-        verify(bookRepository).save(any(BookEntity.class));
+        verify(bookRepository).save(any(Book.class), eq(2));
     }
 }

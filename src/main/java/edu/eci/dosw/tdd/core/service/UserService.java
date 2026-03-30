@@ -2,10 +2,8 @@ package edu.eci.dosw.tdd.core.service;
 
 import edu.eci.dosw.tdd.core.exception.UserNotFoundException;
 import edu.eci.dosw.tdd.core.model.User;
+import edu.eci.dosw.tdd.core.repository.UserRepositoryPort;
 import edu.eci.dosw.tdd.core.validator.UserValidator;
-import edu.eci.dosw.tdd.persistence.relational.entity.UserEntity;
-import edu.eci.dosw.tdd.persistence.relational.repository.UserRepository;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,43 +11,30 @@ import java.util.List;
 @Service
 public class UserService {
 
-    private final UserRepository userRepository;
+    private final UserRepositoryPort userRepository;
     private final UserValidator validator;
-    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, UserValidator validator, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepositoryPort userRepository, UserValidator validator) {
         this.userRepository = userRepository;
         this.validator = validator;
-        this.passwordEncoder = passwordEncoder;
     }
 
     public void registrar(User usuario) {
         validator.validar(usuario.getId(), usuario.getNombre());
         validator.validarCredenciales(usuario.getUsername(), usuario.getPassword());
-        UserEntity entity = new UserEntity(
-                usuario.getId(),
-                usuario.getNombre(),
-                usuario.getUsername(),
-                passwordEncoder.encode(usuario.getPassword()),
-                usuario.getRole() != null ? usuario.getRole() : UserEntity.Role.USER
-        );
-        userRepository.save(entity);
+        userRepository.save(usuario);
     }
 
     public List<User> obtenerTodos() {
-        return userRepository.findAll().stream()
-                .map(e -> new User(e.getId(), e.getNombre()))
-                .toList();
+        return userRepository.findAll();
     }
 
     public User buscarPorId(String id) throws UserNotFoundException {
-        UserEntity entity = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("no existe el usuario con id: " + id));
-        return new User(entity.getId(), entity.getNombre());
-    }
-
-    public UserEntity buscarEntidadPorId(String id) throws UserNotFoundException {
         return userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("no existe el usuario con id: " + id));
+    }
+
+    public User buscarEntidadPorId(String id) throws UserNotFoundException {
+        return buscarPorId(id);
     }
 }
