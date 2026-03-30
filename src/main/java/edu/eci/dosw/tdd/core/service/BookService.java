@@ -32,14 +32,14 @@ public class BookService {
 
     public List<Book> obtenerTodos() {
         return bookRepository.findAll().stream()
-                .map(e -> new Book(e.getId(), e.getTitulo(), e.getAutor()))
+                .map(e -> new Book(e.getId(), e.getTitulo(), e.getAutor(), e.getStockDisponible()))
                 .toList();
     }
 
     public Book buscarPorId(String id) throws BookNotFoundException {
         BookEntity entity = bookRepository.findById(id)
                 .orElseThrow(() -> new BookNotFoundException("no existe el libro con id: " + id));
-        return new Book(entity.getId(), entity.getTitulo(), entity.getAutor());
+        return new Book(entity.getId(), entity.getTitulo(), entity.getAutor(), entity.getStockDisponible());
     }
 
     public int obtenerEjemplares(String id) throws BookNotFoundException {

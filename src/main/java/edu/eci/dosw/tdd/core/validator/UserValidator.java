@@ -9,4 +9,9 @@ public class UserValidator {
         if (!ValidationUtil.isValidId(id)) throw new IllegalArgumentException("id del usuario invalido");
         if (!ValidationUtil.isNotEmpty(nombre)) throw new IllegalArgumentException("nombre del usuario requerido");
     }
+
+    public void validarCredenciales(String username, String password) {
+        if (!ValidationUtil.isNotEmpty(username)) throw new IllegalArgumentException("username requerido");
+        if (password == null || password.length() < 6) throw new IllegalArgumentException("password debe tener al menos 6 caracteres");
+    }
 }

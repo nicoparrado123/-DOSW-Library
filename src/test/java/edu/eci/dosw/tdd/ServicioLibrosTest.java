@@ -61,7 +61,7 @@ class ServicioLibrosTest {
     @Test
     void agregarLibroNuevo() {
         when(bookRepository.findById("nico-002")).thenReturn(Optional.empty());
-        bookService.agregarLibro(new Book("nico-002", "refactoring", "fowler"), 2);
+        bookService.agregarLibro(new Book("nico-002", "refactoring", "fowler", 0), 2);
         verify(bookRepository).save(any(BookEntity.class));
     }
 }

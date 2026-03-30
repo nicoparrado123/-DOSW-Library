@@ -25,6 +25,7 @@ public class UserService {
 
     public void registrar(User usuario) {
         validator.validar(usuario.getId(), usuario.getNombre());
+        validator.validarCredenciales(usuario.getUsername(), usuario.getPassword());
         UserEntity entity = new UserEntity(
                 usuario.getId(),
                 usuario.getNombre(),

@@ -75,7 +75,7 @@ public class LoanService {
 
     private Loan toModel(LoanEntity e) {
         Loan loan = new Loan(
-                new edu.eci.dosw.tdd.core.model.Book(e.getLibro().getId(), e.getLibro().getTitulo(), e.getLibro().getAutor()),
+                new edu.eci.dosw.tdd.core.model.Book(e.getLibro().getId(), e.getLibro().getTitulo(), e.getLibro().getAutor(), e.getLibro().getStockDisponible()),
                 new edu.eci.dosw.tdd.core.model.User(e.getUsuario().getId(), e.getUsuario().getNombre()),
                 e.getFechaPrestamo()
         );

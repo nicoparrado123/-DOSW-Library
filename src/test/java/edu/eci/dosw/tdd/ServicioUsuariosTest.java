@@ -53,7 +53,7 @@ class ServicioUsuariosTest {
     void registrarUsuario() {
         User user = new User("nico-002", "amigo de nico");
         user.setUsername("amigo");
-        user.setPassword("pass");
+        user.setPassword("pass12");
         userService.registrar(user);
         verify(userRepository).save(any(UserEntity.class));
     }

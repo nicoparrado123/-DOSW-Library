@@ -22,7 +22,7 @@ class ModelAndUtilTest {
 
     @Test
     void bookGuardaAtributosCorrectamente() {
-        Book libro = new Book("clean-001", "Clean Code", "Robert Martin");
+        Book libro = new Book("clean-001", "Clean Code", "Robert Martin", 0);
         assertEquals("clean-001", libro.getId());
         assertEquals("Clean Code", libro.getTitulo());
         assertEquals("Robert Martin", libro.getAutor());
@@ -57,7 +57,7 @@ class ModelAndUtilTest {
 
     @Test
     void loanNuevoEstaActivoSinFechaDevolucion() {
-        Book libro = new Book("clean-001", "Clean Code", "Martin");
+        Book libro = new Book("clean-001", "Clean Code", "Martin", 0);
         User usuario = new User("nico-001", "Nicolas");
         Loan prestamo = new Loan(libro, usuario, LocalDate.now());
         assertEquals(LoanStatus.ACTIVO, prestamo.getEstado());
@@ -68,7 +68,7 @@ class ModelAndUtilTest {
     @Test
     void loanDevueltoActualizaEstadoYFecha() {
         Loan prestamo = new Loan(
-                new Book("clean-001", "Clean Code", "Martin"),
+                new Book("clean-001", "Clean Code", "Martin", 0),
                 new User("nico-001", "Nicolas"),
                 LocalDate.now()
         );
@@ -80,7 +80,7 @@ class ModelAndUtilTest {
 
     @Test
     void loanGuardaReferenciaAlLibroYUsuario() {
-        Book libro = new Book("clean-001", "Clean Code", "Martin");
+        Book libro = new Book("clean-001", "Clean Code", "Martin", 0);
         User usuario = new User("nico-001", "Nicolas");
         Loan prestamo = new Loan(libro, usuario, LocalDate.now());
         assertEquals(libro, prestamo.getLibro());
@@ -123,7 +123,7 @@ class ModelAndUtilTest {
 
     @Test
     void bookMapperConvierteEntreModelYDTO() {
-        Book libro = new Book("clean-001", "Clean Code", "Robert Martin");
+        Book libro = new Book("clean-001", "Clean Code", "Robert Martin", 0);
         BookMapper mapper = new BookMapper();
 
         BookDTO dto = mapper.toDTO(libro);
@@ -152,7 +152,7 @@ class ModelAndUtilTest {
 
     @Test
     void loanMapperConviertePrestamoActivoADTO() {
-        Book libro = new Book("clean-001", "Clean Code", "Robert Martin");
+        Book libro = new Book("clean-001", "Clean Code", "Robert Martin", 0);
         User usuario = new User("nico-001", "Nicolas");
         Loan prestamo = new Loan(libro, usuario, LocalDate.of(2024, 6, 1));
 
@@ -169,7 +169,7 @@ class ModelAndUtilTest {
     @Test
     void loanMapperConviertePrestamoDevueltoADTO() {
         Loan prestamo = new Loan(
-                new Book("clean-001", "Clean Code", "Martin"),
+                new Book("clean-001", "Clean Code", "Martin", 0),
                 new User("nico-001", "Nicolas"),
                 LocalDate.of(2024, 6, 1)
         );

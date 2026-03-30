@@ -38,7 +38,7 @@ public class UserTDD {
         mockMvc.perform(post("/usuarios")
                 .header("Authorization", "Bearer " + librarianToken)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"id\":\"usr-001\",\"nombre\":\"Nico\",\"username\":\"nico\",\"password\":\"pass\",\"role\":\"USER\"}"))
+                .content("{\"id\":\"usr-001\",\"nombre\":\"Nico\",\"username\":\"nico\",\"password\":\"pass12\",\"role\":\"USER\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value("usr-001"));
 
@@ -53,7 +53,7 @@ public class UserTDD {
         mockMvc.perform(post("/usuarios")
                 .header("Authorization", "Bearer " + librarianToken)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"id\":\"usr-002\",\"nombre\":\"Ana\",\"username\":\"ana\",\"password\":\"pass\",\"role\":\"USER\"}"))
+                .content("{\"id\":\"usr-002\",\"nombre\":\"Ana\",\"username\":\"ana\",\"password\":\"pass12\",\"role\":\"USER\"}"))
                 .andExpect(status().isOk());
 
         mockMvc.perform(get("/usuarios/usr-002")
