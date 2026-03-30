@@ -1,6 +1,6 @@
 package edu.eci.dosw.tdd.controller.mapper;
 
-import edu.eci.dosw.tdd.persistence.entity.UserEntity;
+import edu.eci.dosw.tdd.persistence.relational.entity.UserEntity;
 
 public class UserDTO {
     private String id;
