@@ -6,7 +6,7 @@ Sistema de gestión de biblioteca desarrollado con Spring Boot y Maven. Permite 
 
 ## Diagrama General
 
-el sistema se divide en capas. el cliente manda peticiones HTTP que primero pasan por el filtro JWT. si el token es válido, la request llega al controlador correspondiente. cada controlador le pasa el trabajo al servicio. los servicios usan los validadores para revisar los datos, luego operan sobre los modelos de dominio y persisten los cambios a través de los repositorios JPA. los controladores usan los mappers para convertir entre modelos y DTOs.
+el cliente manda peticiones HTTP que pasan por el filtro JWT. si el token es válido llega al controlador, que delega al servicio. el servicio valida, opera sobre el modelo de dominio y persiste a través de una interfaz de repositorio. según el perfil activo (`mongo` o `relational`), Spring inyecta la implementación correspondiente.
 
 ```mermaid
 graph TD
@@ -14,10 +14,12 @@ graph TD
     JwtAuthFilter -->|token válido| Controller
     JwtAuthFilter -->|token inválido| 401
     Controller -->|delega lógica| Service
-    Service -->|valida entrada con| Validator
-    Service -->|opera sobre| Model
-    Service -->|persiste con| Repository
-    Repository -->|accede a| Database[(PostgreSQL)]
+    Service -->|valida con| Validator
+    Service -->|usa interfaz| RepositoryPort
+    RepositoryPort -->|perfil mongo| MongoImpl
+    RepositoryPort -->|perfil relational| JpaImpl
+    MongoImpl -->|accede a| MongoDB[(MongoDB Atlas)]
+    JpaImpl -->|accede a| PostgreSQL[(PostgreSQL)]
     Controller -->|convierte con| Mapper
     Mapper -->|transforma a/desde| DTO
 ```
@@ -26,18 +28,18 @@ graph TD
 
 ## Diagrama de Autenticación
 
-el cliente manda sus credenciales al endpoint de login. el sistema las valida contra la base de datos, y si son correctas genera un JWT firmado con el id del usuario y su rol. el cliente usa ese token en cada request siguiente en el header Authorization.
+el cliente manda sus credenciales al endpoint de login. el sistema las valida contra la base de datos activa (MongoDB o PostgreSQL según el perfil), genera un JWT firmado y el cliente lo usa en cada request siguiente.
 
 ```mermaid
 sequenceDiagram
     participant Cliente
     participant AuthController
-    participant UserRepository
+    participant UserRepositoryPort
     participant JwtService
 
     Cliente->>AuthController: POST /auth/login {username, password}
-    AuthController->>UserRepository: findByUsername(username)
-    UserRepository-->>AuthController: UserEntity
+    AuthController->>UserRepositoryPort: findByUsername(username)
+    UserRepositoryPort-->>AuthController: User
     AuthController->>AuthController: verificar password (BCrypt)
     AuthController->>JwtService: generateToken(userId, role)
     JwtService-->>AuthController: JWT firmado
@@ -54,39 +56,34 @@ sequenceDiagram
 
 ## Diagrama Específico
 
-aca se ve paso a paso como funciona un prestamo con persistencia. el cliente manda el token JWT, el filtro lo valida y carga el usuario en el contexto de seguridad. el `LoanController` delega al `LoanService`, que valida los ids, busca las entidades en la base de datos, verifica disponibilidad y límite de préstamos, actualiza el stock y persiste el préstamo.
+el cliente manda el token JWT, el filtro lo valida. el `LoanController` delega al `LoanService`, que valida los ids, busca los modelos de dominio, verifica disponibilidad y límite, actualiza el stock y persiste el préstamo a través de la interfaz `LoanRepositoryPort`.
 
 ```mermaid
 sequenceDiagram
     participant Cliente
     participant JwtAuthFilter
     participant LoanController
-    participant LoanValidator
+    participant LoanService
     participant UserService
     participant BookService
-    participant LoanService
-    participant LoanRepository
-    participant BookRepository
+    participant LoanRepositoryPort
+    participant DB[(MongoDB o PostgreSQL)]
 
     Cliente->>JwtAuthFilter: POST /prestamos/{idUsuario}/{idLibro} + Bearer token
     JwtAuthFilter->>JwtAuthFilter: validar token y cargar contexto
     JwtAuthFilter->>LoanController: request autorizada
     LoanController->>LoanService: prestar(idUsuario, idLibro)
-    LoanService->>LoanValidator: validar(idUsuario, idLibro)
     LoanService->>UserService: buscarEntidadPorId(idUsuario)
-    UserService->>LoanRepository: findById(idUsuario)
-    LoanRepository-->>UserService: UserEntity
-    UserService-->>LoanService: UserEntity
-    LoanService->>BookService: buscarEntidadPorId(idLibro)
-    BookService->>BookRepository: findById(idLibro)
-    BookRepository-->>BookService: BookEntity
-    BookService-->>LoanService: BookEntity
-    LoanService->>LoanRepository: countByUsuarioIdAndEstado(ACTIVO)
-    LoanRepository-->>LoanService: cantidad activos
+    UserService-->>LoanService: User
+    LoanService->>BookService: buscarPorId(idLibro)
+    BookService-->>LoanService: Book
+    LoanService->>LoanRepositoryPort: countByUsuarioIdAndEstado(ACTIVO)
+    LoanRepositoryPort-->>LoanService: cantidad activos
     LoanService->>BookService: actualizarEjemplares(idLibro, stock - 1)
-    BookService->>BookRepository: save(BookEntity)
-    LoanService->>LoanRepository: save(LoanEntity)
-    LoanRepository-->>LoanService: LoanEntity
+    LoanService->>LoanRepositoryPort: save(Loan)
+    LoanRepositoryPort->>DB: persistir
+    DB-->>LoanRepositoryPort: Loan guardado
+    LoanRepositoryPort-->>LoanService: Loan
     LoanService-->>LoanController: Loan
     LoanController-->>Cliente: LoanDTO (200 OK)
 ```
@@ -95,7 +92,7 @@ sequenceDiagram
 
 ## Diagrama de Clases
 
-el sistema tiene dos capas de modelo: los modelos de dominio (`Book`, `User`, `Loan`) que usan los servicios internamente, y las entidades JPA (`BookEntity`, `UserEntity`, `LoanEntity`) que se persisten en la base de datos. `UserEntity` ahora incluye `username`, `password` y `role`. la capa de seguridad tiene `JwtService` para generar y validar tokens, `JwtAuthFilter` que intercepta cada request, y `SecurityConfig` que define las reglas de acceso.
+el sistema tiene modelos de dominio (`Book`, `User`, `Loan`) que usan los servicios. las interfaces de repositorio (`BookRepositoryPort`, `UserRepositoryPort`, `LoanRepositoryPort`) desacoplan los servicios de la persistencia. según el perfil activo, Spring inyecta la implementación JPA o MongoDB.
 
 ```mermaid
 classDiagram
@@ -103,8 +100,8 @@ classDiagram
         -String id
         -String titulo
         -String autor
+        -int stockDisponible
     }
-
     class User {
         -String id
         -String nombre
@@ -112,7 +109,6 @@ classDiagram
         -String password
         -Role role
     }
-
     class Loan {
         -Book libro
         -User usuario
@@ -120,118 +116,98 @@ classDiagram
         -LocalDate fechaDevolucion
         -LoanStatus estado
     }
-
     class LoanStatus {
         <<enumeration>>
         ACTIVO
         DEVUELTO
     }
-
-    class BookEntity {
-        -String id
-        -String titulo
-        -String autor
-        -int stockTotal
-        -int stockDisponible
-    }
-
-    class UserEntity {
-        -String id
-        -String nombre
-        -String username
-        -String password
-        -Role role
-    }
-
     class Role {
         <<enumeration>>
         USER
         LIBRARIAN
     }
-
-    class LoanEntity {
-        -Long id
-        -BookEntity libro
-        -UserEntity usuario
-        -LocalDate fechaPrestamo
-        -LocalDate fechaDevolucion
-        -LoanStatus estado
-    }
-
-    class BookRepository {
+    class BookRepositoryPort {
+        <<interface>>
+        +save(Book, int)
         +findById(String)
         +findAll()
-        +save(BookEntity)
+        +getStock(String)
+        +updateStock(String, int)
     }
-
-    class UserRepository {
+    class UserRepositoryPort {
+        <<interface>>
+        +save(User)
         +findById(String)
         +findByUsername(String)
-        +save(UserEntity)
+        +findAll()
     }
-
-    class LoanRepository {
+    class LoanRepositoryPort {
+        <<interface>>
+        +save(Loan)
+        +findAll()
         +findByUsuarioId(String)
         +countByUsuarioIdAndEstado(String, LoanStatus)
         +findByUsuarioIdAndLibroIdAndEstado(String, String, LoanStatus)
-        +save(LoanEntity)
     }
-
+    class BookRepositoryJpaImpl {
+        <<Profile relational>>
+    }
+    class BookRepositoryMongoImpl {
+        <<Profile mongo>>
+    }
+    class UserRepositoryJpaImpl {
+        <<Profile relational>>
+    }
+    class UserRepositoryMongoImpl {
+        <<Profile mongo>>
+    }
+    class LoanRepositoryJpaImpl {
+        <<Profile relational>>
+    }
+    class LoanRepositoryMongoImpl {
+        <<Profile mongo>>
+    }
     class BookService {
         +agregarLibro(Book, int)
         +obtenerTodos()
         +buscarPorId(String)
         +obtenerEjemplares(String)
         +actualizarEjemplares(String, int)
-        +buscarEntidadPorId(String)
     }
-
     class UserService {
         +registrar(User)
         +obtenerTodos()
         +buscarPorId(String)
-        +buscarEntidadPorId(String)
     }
-
     class LoanService {
         +prestar(String, String)
         +devolver(String, String)
         +obtenerTodos()
         +obtenerPorUsuario(String)
     }
-
     class JwtService {
         +generateToken(String, String)
-        +extractUserId(String)
-        +extractRole(String)
         +isValid(String)
     }
-
     class JwtAuthFilter {
         +doFilterInternal()
     }
-
     class SecurityConfig {
         +filterChain(HttpSecurity)
-        +passwordEncoder()
     }
-
     class AuthController {
         +login(Map)
     }
-
     class BookController {
         +obtenerTodos()
         +obtenerPorId(String)
         +agregar(BookDTO)
     }
-
     class UserController {
         +obtenerTodos()
         +obtenerPorId(String)
         +registrar(UserDTO)
     }
-
     class LoanController {
         +obtenerTodos()
         +obtenerPorUsuario(String)
@@ -239,37 +215,25 @@ classDiagram
         +devolver(String, String)
     }
 
-    class BookValidator {
-        +validar(Book)
-    }
-
-    class UserValidator {
-        +validar(String, String)
-    }
-
-    class LoanValidator {
-        +validar(String, String)
-    }
-
     Loan --> Book
     Loan --> User
     Loan --> LoanStatus
-    LoanEntity --> BookEntity
-    LoanEntity --> UserEntity
-    LoanEntity --> LoanStatus
-    UserEntity --> Role
-    BookService --> BookRepository
-    BookService --> BookValidator
-    UserService --> UserRepository
-    UserService --> UserValidator
-    LoanService --> LoanRepository
+    User --> Role
+    BookRepositoryPort <|.. BookRepositoryJpaImpl
+    BookRepositoryPort <|.. BookRepositoryMongoImpl
+    UserRepositoryPort <|.. UserRepositoryJpaImpl
+    UserRepositoryPort <|.. UserRepositoryMongoImpl
+    LoanRepositoryPort <|.. LoanRepositoryJpaImpl
+    LoanRepositoryPort <|.. LoanRepositoryMongoImpl
+    BookService --> BookRepositoryPort
+    UserService --> UserRepositoryPort
+    LoanService --> LoanRepositoryPort
     LoanService --> BookService
     LoanService --> UserService
-    LoanService --> LoanValidator
     BookController --> BookService
     UserController --> UserService
     LoanController --> LoanService
-    AuthController --> UserRepository
+    AuthController --> UserRepositoryPort
     AuthController --> JwtService
     JwtAuthFilter --> JwtService
     SecurityConfig --> JwtAuthFilter

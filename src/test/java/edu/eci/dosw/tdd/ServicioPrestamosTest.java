@@ -112,4 +112,52 @@ class ServicioPrestamosTest {
         when(loanRepository.findAll()).thenReturn(List.of());
         assertEquals(0, loanService.obtenerTodos().size());
     }
+
+    // --- Reto 6 ---
+
+    @Test
+    void dadoUnPrestamoRegistradoCuandoLoConsultoEntoncesEsExitoso() throws Exception {
+        Loan loan = new Loan(bookL1, userNico, LocalDate.now());
+        when(loanRepository.findByUsuarioId("nico-001")).thenReturn(List.of(loan));
+        List<Loan> resultado = loanService.obtenerPorUsuario("nico-001");
+        assertEquals(1, resultado.size());
+        assertEquals("nico-l1", resultado.get(0).getLibro().getId());
+    }
+
+    @Test
+    void dadoNingunPrestamoRegistradoCuandoConsultaEntoncesRetornaVacio() throws Exception {
+        when(loanRepository.findByUsuarioId("nico-001")).thenReturn(List.of());
+        assertEquals(0, loanService.obtenerPorUsuario("nico-001").size());
+    }
+
+    @Test
+    void dadoNingunPrestamoRegistradoCuandoCreoEntoncesEsExitoso() throws Exception {
+        Loan loan = loanService.prestar("nico-001", "nico-l1");
+        assertNotNull(loan);
+        assertEquals(LoanStatus.ACTIVO, loan.getEstado());
+    }
+
+    @Test
+    void dadoUnPrestamoRegistradoCuandoEliminoEntoncesEsExitoso() throws Exception {
+        Loan loan = new Loan(bookL1, userNico, LocalDate.now());
+        when(loanRepository.findByUsuarioIdAndLibroIdAndEstado("nico-001", "nico-l1", LoanStatus.ACTIVO))
+                .thenReturn(Optional.of(loan));
+        when(bookService.obtenerEjemplares("nico-l1")).thenReturn(1);
+        when(loanRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        Loan resultado = loanService.devolver("nico-001", "nico-l1");
+        assertEquals(LoanStatus.DEVUELTO, resultado.getEstado());
+    }
+
+    @Test
+    void dadoUnPrestamoRegistradoCuandoEliminoYConsultoEntoncesNoRetornaNada() throws Exception {
+        Loan loan = new Loan(bookL1, userNico, LocalDate.now());
+        when(loanRepository.findByUsuarioIdAndLibroIdAndEstado("nico-001", "nico-l1", LoanStatus.ACTIVO))
+                .thenReturn(Optional.of(loan));
+        when(bookService.obtenerEjemplares("nico-l1")).thenReturn(1);
+        when(loanRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        loanService.devolver("nico-001", "nico-l1");
+        when(loanRepository.findByUsuarioIdAndLibroIdAndEstado("nico-001", "nico-l1", LoanStatus.ACTIVO))
+                .thenReturn(Optional.empty());
+        assertFalse(loanRepository.findByUsuarioIdAndLibroIdAndEstado("nico-001", "nico-l1", LoanStatus.ACTIVO).isPresent());
+    }
 }
