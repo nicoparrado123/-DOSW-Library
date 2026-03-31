@@ -1,48 +1,92 @@
 # DOSW-Library
 
-Sistema de gestión de biblioteca desarrollado con Spring Boot y Maven. Permite registrar usuarios, agregar libros con sus ejemplares disponibles, realizar préstamos y registrar devoluciones.
+Sistema de gestión de biblioteca desarrollado con Spring Boot y Maven. Permite registrar usuarios, agregar libros con inventario, realizar préstamos y registrar devoluciones. Incluye persistencia en PostgreSQL y seguridad basada en JWT con roles.
 
 ---
 
 ## Diagrama General
 
-el sistema se divide en capas. el cliente manda peticiones HTTP que llegan a los controladores, cada controlador le pasa el trabajo al servicio que le corresponde. los servicios usan los validadores para revisar que los datos esten bien antes de tocar los modelos. los controladores usan los mappers para convertir entre los modelos internos y los DTOs que ve el cliente.
+el sistema se divide en capas. el cliente manda peticiones HTTP que primero pasan por el filtro JWT. si el token es válido, la request llega al controlador correspondiente. cada controlador le pasa el trabajo al servicio. los servicios usan los validadores para revisar los datos, luego operan sobre los modelos de dominio y persisten los cambios a través de los repositorios JPA. los controladores usan los mappers para convertir entre modelos y DTOs.
 
 ```mermaid
 graph TD
-    Cliente -->|HTTP Request| Controller
+    Cliente -->|HTTP Request| JwtAuthFilter
+    JwtAuthFilter -->|token válido| Controller
+    JwtAuthFilter -->|token inválido| 401
     Controller -->|delega lógica| Service
     Service -->|valida entrada con| Validator
     Service -->|opera sobre| Model
+    Service -->|persiste con| Repository
+    Repository -->|accede a| Database[(PostgreSQL)]
     Controller -->|convierte con| Mapper
     Mapper -->|transforma a/desde| DTO
 ```
 
 ---
 
-## Diagrama Específico
+## Diagrama de Autenticación
 
-aca se ve paso a paso como funciona un prestamo. el cliente llama al `LoanController` con el id del usuario y el libro, ese le pasa la tarea al `LoanService`. el servicio valida los ids, busca el usuario y el libro, revisa que haya ejemplares disponibles y que el usuario no tenga mas de 3 prestamos activos. si todo esta bien le resta un ejemplar al libro y registra el prestamo, al final le devuelve un `LoanDTO` al cliente.
+el cliente manda sus credenciales al endpoint de login. el sistema las valida contra la base de datos, y si son correctas genera un JWT firmado con el id del usuario y su rol. el cliente usa ese token en cada request siguiente en el header Authorization.
 
 ```mermaid
 sequenceDiagram
     participant Cliente
+    participant AuthController
+    participant UserRepository
+    participant JwtService
+
+    Cliente->>AuthController: POST /auth/login {username, password}
+    AuthController->>UserRepository: findByUsername(username)
+    UserRepository-->>AuthController: UserEntity
+    AuthController->>AuthController: verificar password (BCrypt)
+    AuthController->>JwtService: generateToken(userId, role)
+    JwtService-->>AuthController: JWT firmado
+    AuthController-->>Cliente: {token} (200 OK)
+
+    Cliente->>AuthController: GET /libros
+    Note over Cliente,AuthController: Authorization: Bearer token
+    AuthController->>JwtService: isValid(token)
+    JwtService-->>AuthController: true
+    AuthController-->>Cliente: [libros] (200 OK)
+```
+
+---
+
+## Diagrama Específico
+
+aca se ve paso a paso como funciona un prestamo con persistencia. el cliente manda el token JWT, el filtro lo valida y carga el usuario en el contexto de seguridad. el `LoanController` delega al `LoanService`, que valida los ids, busca las entidades en la base de datos, verifica disponibilidad y límite de préstamos, actualiza el stock y persiste el préstamo.
+
+```mermaid
+sequenceDiagram
+    participant Cliente
+    participant JwtAuthFilter
     participant LoanController
     participant LoanValidator
     participant UserService
     participant BookService
     participant LoanService
+    participant LoanRepository
+    participant BookRepository
 
-    Cliente->>LoanController: POST /prestamos/{idUsuario}/{idLibro}
+    Cliente->>JwtAuthFilter: POST /prestamos/{idUsuario}/{idLibro} + Bearer token
+    JwtAuthFilter->>JwtAuthFilter: validar token y cargar contexto
+    JwtAuthFilter->>LoanController: request autorizada
     LoanController->>LoanService: prestar(idUsuario, idLibro)
     LoanService->>LoanValidator: validar(idUsuario, idLibro)
-    LoanService->>UserService: buscarPorId(idUsuario)
-    UserService-->>LoanService: User
-    LoanService->>BookService: buscarPorId(idLibro)
-    BookService-->>LoanService: Book
-    LoanService->>BookService: obtenerEjemplares(idLibro)
-    BookService-->>LoanService: cantidad
-    LoanService->>BookService: actualizarEjemplares(idLibro, cantidad - 1)
+    LoanService->>UserService: buscarEntidadPorId(idUsuario)
+    UserService->>LoanRepository: findById(idUsuario)
+    LoanRepository-->>UserService: UserEntity
+    UserService-->>LoanService: UserEntity
+    LoanService->>BookService: buscarEntidadPorId(idLibro)
+    BookService->>BookRepository: findById(idLibro)
+    BookRepository-->>BookService: BookEntity
+    BookService-->>LoanService: BookEntity
+    LoanService->>LoanRepository: countByUsuarioIdAndEstado(ACTIVO)
+    LoanRepository-->>LoanService: cantidad activos
+    LoanService->>BookService: actualizarEjemplares(idLibro, stock - 1)
+    BookService->>BookRepository: save(BookEntity)
+    LoanService->>LoanRepository: save(LoanEntity)
+    LoanRepository-->>LoanService: LoanEntity
     LoanService-->>LoanController: Loan
     LoanController-->>Cliente: LoanDTO (200 OK)
 ```
@@ -51,7 +95,7 @@ sequenceDiagram
 
 ## Diagrama de Clases
 
-aca estan todas las clases del sistema con sus atributos, metodos y como se relacionan entre ellas. `Loan` es la clase mas importante porque conecta un `Book` con un `User` y guarda el estado del prestamo con `LoanStatus`. los servicios manejan las listas de cada entidad y cada uno tiene su validador. los controladores solo reciben la peticion HTTP y se la pasan al servicio.
+el sistema tiene dos capas de modelo: los modelos de dominio (`Book`, `User`, `Loan`) que usan los servicios internamente, y las entidades JPA (`BookEntity`, `UserEntity`, `LoanEntity`) que se persisten en la base de datos. `UserEntity` ahora incluye `username`, `password` y `role`. la capa de seguridad tiene `JwtService` para generar y validar tokens, `JwtAuthFilter` que intercepta cada request, y `SecurityConfig` que define las reglas de acceso.
 
 ```mermaid
 classDiagram
@@ -59,16 +103,14 @@ classDiagram
         -String id
         -String titulo
         -String autor
-        +getId()
-        +getTitulo()
-        +getAutor()
     }
 
     class User {
         -String id
         -String nombre
-        +getId()
-        +getNombre()
+        -String username
+        -String password
+        -Role role
     }
 
     class Loan {
@@ -77,9 +119,6 @@ classDiagram
         -LocalDate fechaPrestamo
         -LocalDate fechaDevolucion
         -LoanStatus estado
-        +getEstado()
-        +setEstado()
-        +setFechaDevolucion()
     }
 
     class LoanStatus {
@@ -88,18 +127,70 @@ classDiagram
         DEVUELTO
     }
 
+    class BookEntity {
+        -String id
+        -String titulo
+        -String autor
+        -int stockTotal
+        -int stockDisponible
+    }
+
+    class UserEntity {
+        -String id
+        -String nombre
+        -String username
+        -String password
+        -Role role
+    }
+
+    class Role {
+        <<enumeration>>
+        USER
+        LIBRARIAN
+    }
+
+    class LoanEntity {
+        -Long id
+        -BookEntity libro
+        -UserEntity usuario
+        -LocalDate fechaPrestamo
+        -LocalDate fechaDevolucion
+        -LoanStatus estado
+    }
+
+    class BookRepository {
+        +findById(String)
+        +findAll()
+        +save(BookEntity)
+    }
+
+    class UserRepository {
+        +findById(String)
+        +findByUsername(String)
+        +save(UserEntity)
+    }
+
+    class LoanRepository {
+        +findByUsuarioId(String)
+        +countByUsuarioIdAndEstado(String, LoanStatus)
+        +findByUsuarioIdAndLibroIdAndEstado(String, String, LoanStatus)
+        +save(LoanEntity)
+    }
+
     class BookService {
         +agregarLibro(Book, int)
         +obtenerTodos()
         +buscarPorId(String)
         +obtenerEjemplares(String)
         +actualizarEjemplares(String, int)
+        +buscarEntidadPorId(String)
     }
 
     class UserService {
         +registrar(User)
         +obtenerTodos()
         +buscarPorId(String)
+        +buscarEntidadPorId(String)
     }
 
     class LoanService {
@@ -107,6 +198,26 @@ classDiagram
         +devolver(String, String)
         +obtenerTodos()
         +obtenerPorUsuario(String)
+    }
+
+    class JwtService {
+        +generateToken(String, String)
+        +extractUserId(String)
+        +extractRole(String)
+        +isValid(String)
+    }
+
+    class JwtAuthFilter {
+        +doFilterInternal()
+    }
+
+    class SecurityConfig {
+        +filterChain(HttpSecurity)
+        +passwordEncoder()
+    }
+
+    class AuthController {
+        +login(Map)
     }
 
     class BookController {
@@ -123,6 +234,7 @@ classDiagram
 
     class LoanController {
         +obtenerTodos()
+        +obtenerPorUsuario(String)
         +prestar(String, String)
         +devolver(String, String)
     }
@@ -139,21 +251,146 @@ classDiagram
         +validar(String, String)
     }
 
-    Loan "1" --> "1" Book : tiene
-    Loan "1" --> "1" User : pertenece a
-    Loan "1" --> "1" LoanStatus : tiene estado
-    BookService "1" --> "0..*" Book : gestiona
-    BookService "1" --> "1" BookValidator : usa
-    UserService "1" --> "0..*" User : gestiona
-    UserService "1" --> "1" UserValidator : usa
-    LoanService "1" --> "0..*" Loan : gestiona
-    LoanService "1" --> "1" BookService : usa
-    LoanService "1" --> "1" UserService : usa
-    LoanService "1" --> "1" LoanValidator : usa
-    BookController "1" --> "1" BookService : delega en
-    UserController "1" --> "1" UserService : delega en
-    LoanController "1" --> "1" LoanService : delega en
+    Loan --> Book
+    Loan --> User
+    Loan --> LoanStatus
+    LoanEntity --> BookEntity
+    LoanEntity --> UserEntity
+    LoanEntity --> LoanStatus
+    UserEntity --> Role
+    BookService --> BookRepository
+    BookService --> BookValidator
+    UserService --> UserRepository
+    UserService --> UserValidator
+    LoanService --> LoanRepository
+    LoanService --> BookService
+    LoanService --> UserService
+    LoanService --> LoanValidator
+    BookController --> BookService
+    UserController --> UserService
+    LoanController --> LoanService
+    AuthController --> UserRepository
+    AuthController --> JwtService
+    JwtAuthFilter --> JwtService
+    SecurityConfig --> JwtAuthFilter
 ```
+
+---
+
+## Diagrama Entidad-Relación
+
+la base de datos tiene tres tablas. `users` guarda los datos del usuario incluyendo credenciales y rol. `books` guarda el libro con su stock total y disponible. `loans` conecta un usuario con un libro y guarda el estado del préstamo.
+
+```mermaid
+erDiagram
+    USERS {
+        varchar id PK
+        varchar nombre
+        varchar username
+        varchar password
+        varchar role
+    }
+
+    BOOKS {
+        varchar id PK
+        varchar titulo
+        varchar autor
+        int stock_total
+        int stock_disponible
+    }
+
+    LOANS {
+        bigint id PK
+        varchar user_id FK
+        varchar book_id FK
+        date fecha_prestamo
+        date fecha_devolucion
+        varchar estado
+    }
+
+    USERS ||--o{ LOANS : "tiene"
+    BOOKS ||--o{ LOANS : "es prestado en"
+```
+
+---
+
+## Modelo No Relacional (MongoDB)
+
+el modelo NoSQL usa tres colecciones. `books` y `users` son documentos independientes con toda su información embebida. `loans` referencia a ambos por id y embebe el historial de cambios de estado directamente dentro del documento del préstamo.
+
+### Decisiones de diseño
+
+- `metadata`, `disponibilidad` y `categorias` se **embeben** en `books` porque son datos propios del libro, siempre se leen juntos y no se comparten con otros documentos.
+- `historial` se **embebe** en `loans` porque es exclusivo de ese préstamo y crece de forma acotada (pocos cambios de estado por préstamo).
+- `usuario` y `libro` en `loans` se **referencian** por id porque son entidades independientes que pueden consultarse y modificarse por separado.
+
+### Colección: books
+
+```json
+{
+  "_id": "isbn-001",
+  "titulo": "Clean Code",
+  "autor": "Robert C. Martin",
+  "isbn": "978-0132350884",
+  "tipoPublicacion": "ebook",
+  "fechaPublicacion": "2008-08-01",
+  "fechaAgregado": "2024-01-15",
+  "categorias": ["programacion", "buenas practicas"],
+  "metadata": {
+    "paginas": 431,
+    "idioma": "ingles",
+    "editorial": "Prentice Hall"
+  },
+  "disponibilidad": {
+    "status": "DISPONIBLE",
+    "totalCopias": 5,
+    "copiasDisponibles": 3,
+    "copiasPrestadas": 2
+  }
+}
+```
+
+### Colección: users
+
+```json
+{
+  "_id": "u-001",
+  "nombre": "Juan Perez",
+  "username": "jperez",
+  "password": "$2a$10$...",
+  "email": "jperez@mail.com",
+  "role": "USER",
+  "membresia": "PLATINUM",
+  "fechaRegistro": "2024-03-10"
+}
+```
+
+### Colección: loans
+
+```json
+{
+  "_id": "loan-001",
+  "usuarioId": "u-001",
+  "libroId": "isbn-001",
+  "fechaPrestamo": "2024-11-01",
+  "fechaDevolucion": "2024-11-15",
+  "estado": "DEVUELTO",
+  "historial": [
+    { "status": "ACTIVO",    "fecha": "2024-11-01" },
+    { "status": "DEVUELTO",  "fecha": "2024-11-15" }
+  ]
+}
+```
+
+---
+
+## Evidencia Parte 3 - Hackathon
+
+### Video pruebas funcionales con Swagger (Reto 4)
+https://youtu.be/Sx4snV0t0pA
+
+### Video persistencia en MongoDB (Reto 4)
+https://youtu.be/azH0CyXqULU
 
 ---
 
@@ -173,6 +410,10 @@ Resultado del análisis estático del proyecto en SonarCloud.
 
 ### Cobertura JaCoCo
 <img width="1288" height="862" alt="image" src="https://github.com/user-attachments/assets/91bccff8-16c6-4bc8-9d85-b477b01677e6" />
+
+### video funcionamiento seguridad
+
+https://youtu.be/g_eFTXSoLVs
 
 
 
