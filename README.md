@@ -384,6 +384,16 @@ el modelo NoSQL usa tres colecciones. `books` y `users` son documentos independi
 
 ---
 
+## Evidencia Parte 3 - Hackathon
+
+### Video pruebas funcionales con Swagger (Reto 4)
+https://youtu.be/Sx4snV0t0pA
+
+### Video persistencia en MongoDB (Reto 4)
+https://youtu.be/azH0CyXqULU
+
+---
+
 ## Análisis estático con SonarCloud
 
 Resultado del análisis estático del proyecto en SonarCloud.
