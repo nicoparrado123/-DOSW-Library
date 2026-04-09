@@ -15,7 +15,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
       - name: Compile
-        run: mvn compile
+        run: mvn compile -DskipTests
 
   test:
     runs-on: ubuntu-latest
@@ -27,11 +27,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
       - name: Verify
-        run: mvn verify -DskipTests=false
-        env:
-          SPRING_PROFILES_ACTIVE: mongo
-          SPRING_DATA_MONGODB_URI: ${{ secrets.MONGODB_URI }}
-          SPRING_DATA_MONGODB_DATABASE: dosw_library
+        run: mvn verify
 
   analysis:
     runs-on: ubuntu-latest
@@ -44,8 +40,10 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-      - name: SonarCloud Analysis
-        run: mvn verify sonar:sonar -DskipTests=true -Dsonar.projectKey=nicoparrado123_library -Dsonar.organization=nicoparrado123 -Dsonar.host.url=https://sonarcloud.io -Dsonar.token=${{ secrets.SONAR_TOKEN }}
+      - name: Verify and SonarCloud Analysis
+        run: mvn verify sonar:sonar -Dsonar.projectKey=nicoparrado123_library -Dsonar.organization=nicoparrado123 -Dsonar.host.url=https://sonarcloud.io -Dsonar.token=${{ secrets.SONAR_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   deploy:
     runs-on: ubuntu-latest
