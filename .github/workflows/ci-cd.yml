@@ -57,7 +57,7 @@ jobs:
       - name: Build JAR
         run: mvn package -DskipTests
       - name: Deploy to Azure
-        uses: azure/webapps-deploy@v2
+        uses: azure/webapps-deploy@v3
         with:
           app-name: 'dosw-library-nico-c8chc3fydnfzdtcm'
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
