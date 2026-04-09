@@ -364,6 +364,11 @@ https://youtu.be/azH0CyXqULU
 
 ---
 
+### evidencia despliegue de app con AZURE 
+
+<img width="1919" height="956" alt="image" src="https://github.com/user-attachments/assets/5c0b960d-d857-43de-8a7f-6b58ba64f762" />
+
+
 
 ## Análisis estático con SonarCloud
 
