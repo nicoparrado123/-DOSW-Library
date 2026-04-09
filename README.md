@@ -368,6 +368,9 @@ https://youtu.be/azH0CyXqULU
 
 <img width="1919" height="956" alt="image" src="https://github.com/user-attachments/assets/5c0b960d-d857-43de-8a7f-6b58ba64f762" />
 
+### Video pruebas funcionales desplegadas en Azure (Reto 7)
+https://youtu.be/3POd-F_Z15U
+
 
 
 ## Análisis estático con SonarCloud
