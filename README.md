@@ -371,6 +371,12 @@ https://youtu.be/azH0CyXqULU
 ### Video pruebas funcionales desplegadas en Azure (Reto 7)
 https://youtu.be/3POd-F_Z15U
 
+---
+
+## High Level Design - Arquitectura
+
+Documento de arquitectura de alto nivel del sistema: [HLD.md](HLD.md)
+
 
 
 ## Análisis estático con SonarCloud
