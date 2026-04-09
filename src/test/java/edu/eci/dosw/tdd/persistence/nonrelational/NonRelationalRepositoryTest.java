@@ -20,6 +20,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
 @ActiveProfiles("mongo")
+@org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable(named = "CI", matches = "true")
 class NonRelationalRepositoryTest {
 
     @Autowired private BookMongoRepository bookMongoRepository;
